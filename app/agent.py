@@ -17,6 +17,7 @@ workflow.add_node("web_search",web_search)
 workflow.add_node("generate",generate)
 
 workflow.add_edge(START,"retrieve")#This is the starting point
+workflow.add_edge("retrieve","grade_documents")
 
 workflow.add_conditional_edges(
     "grade_documents",

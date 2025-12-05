@@ -9,7 +9,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
 from langgraph.prebuilt import tool_node
 from app.models import AgentState,DocumentGrade,Grade
-from app.tools import retriever,brave_search
+from app.tools import retriever,brave_search_results
 from app.prompts import GRADER_PROMPT,RAG_PROMPT
 from langchain_core.callbacks import CallbackManagerForChainRun
 from langchain_core.runnables import RunnableConfig
@@ -86,17 +86,27 @@ def go_to_web(state:AgentState):
         return "generate"
     
 def web_search(state:AgentState):
-    print("Searching the web VIA BRAVE")
-    results=brave_search.invoke(state["question"])
-    web_docs=[
-        Document(
-            page_content=r["snippet"],
-            metadata={"source":r["url"],"title":r["title"],"type":"web"}
-        )
-        for r in results
-    ]
-    return {"documents":state["documents"] + web_docs}
-
+    print("Searching tthe web via BRAVE...")
+    try:
+        results=brave_search_results(state["question"],count=5)
+        web_docs=[]
+        for r in results:
+            web_docs.append(
+                Document(
+                    page_content=r.get("snippet",""),
+                    metadata={
+                        "source":r.get("link","unknown"),
+                        "title":r.get("title","Web Result")
+                    }
+                )
+            )
+            print(f"Added {len(web_docs)} web results")
+            return {"documents":state["documents"] + web_docs}
+    except Exception as e:
+        print(f"Web Search Failed:{e}")
+        return {"documents":state["documents"]}
+        
+    
 def generate(state:AgentState):
     print("Generating final answer")
     context="\n\n".join([d.page_content for d in state["documents"][:15]])
