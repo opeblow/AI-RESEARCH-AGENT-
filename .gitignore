@@ -1,4 +1,5 @@
 .env
-myenv
+venv
 __pycache__
 vectortore
+app/__pycache__
