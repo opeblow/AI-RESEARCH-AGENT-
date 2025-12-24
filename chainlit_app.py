@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from app.agent import app as crag_agent
 import traceback
+import asyncio
 @cl.on_chat_start
 async def start_chat():
     cl.user_session.set("agent",crag_agent)
@@ -21,7 +22,7 @@ async def main(message:cl.Message):
     await msg.send()
 
     try:
-        result=agent.invoke({"question":message.content})
+        result=await asyncio.to_thread(agent.invoke,{"question":message.content})
         answer=result.get("answer","No answer generated")
         citations=result.get("citations",[])
         msg.content=answer
@@ -33,7 +34,7 @@ async def main(message:cl.Message):
 
         await cl.Message(
             content="\n-\nBuilt by **Mobolaji Opeyemi Bolatito Obinna** . CRAG SYSTEM\n(Corrective  Retrieval-Augmented Generation)",
-            author="CRAG SYSTEM"
+            author="System"
         ).send()
 
     except Exception as e:
