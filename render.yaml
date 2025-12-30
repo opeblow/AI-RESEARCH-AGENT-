@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: crag-app
+    runtime: python
+    buildcommand: pip install -r requirements.txt
+    startcommand: chainlit run chainlit_app.py --host 0.0.0.0 --port $port
+    envVars:
+       - key: PYTHON_VERSION
+         value : 3.12.0
+       - key : TOKENIZERS_PARALLELISM
+         value : false
+       - key : OPENAI_API_KEY
+         sync : false
+       - key : BRAVE-OPENAI_API_KEY
+         sync: false
