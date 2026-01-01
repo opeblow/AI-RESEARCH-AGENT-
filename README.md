@@ -3,16 +3,15 @@ A sophisticated Corrective RAG system that intelligently combines local PDF docu
 
 
 ## TABLE OF CONTENTS
--Overview
--Features
--Architecture
--Installation
--Configuration
--Usage
--Project Structure
--How it works
--API Keys required
--Contributing
+  . Overview
+  . Features
+  .Architecture
+  .Installation
+  .Configuration
+  .Usage
+  .Project Structure
+  .How it works
+  .Contributing
 
 
 ## OVERVIEW
@@ -37,33 +36,44 @@ This hybrid approach ensures you get the best possible answer whether the inform
 
 ## ARCHITECTURE
 
-USER QUERY -->RETRIEVE LOCAL PDFs(VECTOR DB)  <---FETCH FROM
-                             |
-                             |
-                             |
-                             |
-                             V
-                       GRADE DOCS RELEVANCE     <---SCORE      
-                              |
-                              |
-                              |
-                              V
-                            QUALITY CHECK?
-                            |         |
-                            |         |
-                        < 2 GOOD CHUNKS   >=2 GOOD CHUNKS
-                            |         |
-                            |         |
-                            V         V
-                        WEB SEARCH    GENERATE ANSWER
-                             |          |
-                             |          |
-                             |__________|          
-                                   |
-                                   |
-                                   |
-                                   V
-                                   FINAL ANSWER + CITATION
+┌─────────────┐
+│   User      │
+│   Query     │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────┐
+│   RETRIEVE      │  ← Fetch from local PDFs
+│   (Vector DB)   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  GRADE DOCS     │  ← Score relevance (0-1)
+│  (LLM Grader)   │
+└────────┬────────┘
+         │
+         ▼
+    ┌────┴────┐
+    │ Quality │
+    │ Check?  │
+    └─┬────┬──┘
+      │    │
+ <2 good chunks  ≥2 good chunks
+      │    │
+      ▼    ▼
+┌──────────┐  ┌──────────┐
+│   WEB    │  │ GENERATE │
+│  SEARCH  │  │  ANSWER  │
+└────┬─────┘  └────┬─────┘
+     │             │
+     └──────┬──────┘
+            ▼
+    ┌──────────────┐
+    │   FINAL      │
+    │   ANSWER     │
+    │ + CITATIONS  │
+    └──────────────┘
 
 
 ## INSTALLATION
@@ -139,27 +149,32 @@ __________________________________________
 Ask me anything:
 
 ## PROJECT STRUCTURE
-AI-RESEARCH-AGENT/
-|__main.py
-|__chainlit_app.py
-|__chainlit.md
-|__requirements.txt
-|__.env
-|__.gitignore
-|__README.md
-|__app/
-|  |__ __init__ .py
-|  |__ agent.py
-|  |__ nodes.py
-|  |__ models.py
-|  |__ tools.py
-|  |__ prompts.py
-|  |__ utils.py
-|__data/
-|  |__ document1.pdf
-|  |__ document2.pdf
-|__ .chainlit/
-    |__ config.toml
+AI-REASEARCH-AGENT/
+│
+├── main.py                 # Entry point - CLI interface
+├── chainlit_app.py         # Chainlit web UI application
+├── chainlit.md             # Chainlit welcome/config file
+├── requirements.txt        # Python dependencies
+├── .env                    # Environment variables (create this)
+├── .gitignore             # Git ignore rules
+├── README.md              # This file
+│
+├── app/
+│   ├── _init_.py
+│   ├── agent.py           # LangGraph workflow definition
+│   ├── nodes.py           # Processing nodes (retrieve, grade, search, generate)
+│   ├── models.py          # Pydantic models for state management
+│   ├── tools.py           # Retriever and search tools
+│   ├── prompts.py         # LLM prompt templates
+│   └── utils.py           # Utility functions (PDF loading, embeddings)
+│
+├── data/                  # Place your PDF documents here
+│   ├── document1.pdf
+│   ├── document2.pdf
+│   └── ...
+│
+└── .chainlit/            # Chainlit config (auto-generated)
+    └── config.toml
 
 
 ## HOW IT WORKS
@@ -189,16 +204,6 @@ AI-RESEARCH-AGENT/
      . Citations extracted from document metadata
 
 
-## API KEYS REQUIRED
-_______________________________________________________________
-Service     |                Purpose    |      Cost   |   Get Key|
-____________|_____________________________________________________ 
-                                                        
-  OPENAI        EMBEDDING AND GENERATION         PAY        platform.openai.com
-                                                 PER USE      
-
-
-Brave Search            Web fallback search      Free tier       brave.con/search/api
 
 
 
@@ -221,4 +226,3 @@ Contributions are welcome! Please follow these steps:
 ## CONTACT
   - Email: opeblow2021gmail.com
 
-  
