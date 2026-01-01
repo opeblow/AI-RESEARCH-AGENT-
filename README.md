@@ -1,90 +1,224 @@
-# CRAG – Corrective Retrieval-Augmented Generation System
-
-*Built from scratch • 100% local documents + web fallback • Self-correcting • Production-grade*
-
- 
-Asks “Who won the 2025 World Series?” → sees local PDFs are irrelevant → automatically searches the web → answers with citations
-
-A fully functional, senior-level Corrective RAG implementation that:
-- Ingests PDFs, DOCX, HTML, TXT via *Unstructured.io*
-- Embeds with *all-MiniLM-L6-v2* → stores in *FAISS*
-- Uses *LangGraph* for stateful, conditional routing
-- Grades retrieval quality in real time
-- Falls back to *Brave Search* when local knowledge is insufficient
-- Cites every claim
-- Signs every answer with *your name*
-
-Built by MOBOLAJI OPEYEMI BOLATITO OBINNA • 2025
-
----
-
-### Why This Project Stands Out (Interview Talking Points)
-
-| Feature                          | Junior RAG                | This CRAG (You)                                   |
-|----------------------------------|---------------------------|----------------------------------------------------|
-| Document ingestion               | PyPDF2 only             | Unstructured.io → handles tables, headers, footers |
-| Chunking                         | Fixed size                | Recursive with overlap → preserves context        |
-| Retrieval                        | Blind top-k               | Grades relevance → self-aware                      |
-| Web fallback                     | Never                     | Brave Search when <2 high-quality chunks           |
-| Architecture                     | Single chain              | LangGraph state machine → conditional edges        |
-| Error handling                   | None                      | Retries on LLM + web calls                         |
-| Branding                         | “Powered by GPT”          | Built by MOBOLAJI OPEYEMI BOLATITO OBINNA               |
-| Deployable                       | No                        | One requirements.txt → runs anywhere             |
-
----
-
-### Live Demo
-
-```text
-Ask me anything: What does the EU AI Act say about foundation models?
-
-→ Found 9 high-quality chunks → enough local info
-→ Answer cites EU_AI_Act_2024.pdf with page references
-
-Ask me anything: Who won Miss Universe 2025?
-
-→ Found 0 relevant chunks → going to web search
-→ Answer cites missuniverse.com + Wikipedia
-
----
-Built by MOBOLAJI OPEYEMI BOLATITO OBINNA• CRAG System (Corrective Retrieval-Augmented Generation)
+Built by Mobolaji Opeyemi Bolatito 
+A sophisticated Corrective RAG system that intelligently combines local PDF document retrieval with web search fallback to provide accurate,well-sourced answers to user queries.
 
 
-crag-project/
-├── main.py                  # Chat interface
-├── data/                    # ← Drop your PDFs/DOCX here
-├── vectorstore/             # Auto-created FAISS index
-├── .env                     # Your keys (never commit!)
-└── app/
-    ├── agent.py             # LangGraph orchestration
-    ├── nodes.py             # Retrieve → Grade → Decide → Web → Generate
-    ├── tools.py             # FAISS retriever + Brave Search
-    ├── utils.py             # Unstructured loading + chunking
-    ├── models.py            # Pydantic + TypedDict schemas
-    ├── prompts.py           # Secure, injection-proof prompts
-    └── _init_.py
+## TABLE OF CONTENTS
+-Overview
+-Features
+-Architecture
+-Installation
+-Configuration
+-Usage
+-Project Structure
+-How it works
+-API Keys required
+-Contributing
 
-git clone https://github.com/OPEBLOW/CRAG.git
-cd CRAG
 
-python -m venv myenv
-source myenv/bin/activate    # Windows: myenv\Scripts\activate
+## OVERVIEW
+CRAG(Corrective Retrieval-Augmented Generation) is an intelligent question answering system that:
 
+1. Retrieves relevant information from your local PDF documents.
+2. Grades the quality and relevance of retrieved documents.
+3. Corrects by falling back to web search when local documents are insufficient.
+4. Generates accurate answers with proper source citations
+
+This hybrid approach ensures you get the best possible answer whether the information exists in your local knowkleded base or needs to be fetched from the web.
+
+## FEATURES
+1. Smart Document Retrieval: Vector-based search through local PDF documents.
+2. Quality Grading:Fallback Brave Search integration for current/missing information.
+3. Sources Citation: Every answer includes traceable sources.
+4. Langgraph Workflow:State machine-based processing pipeline.
+5. Dual Interface:Both CLI and chainlit web UI available.
+6. Chainlit Web UI:Beautiful interactive web interface with chat hstory.
+6. GPT-4 Powered:Leverages OpenAI's GPT-4o-mini for generation.
+
+
+## ARCHITECTURE
+
+USER QUERY -->RETRIEVE LOCAL PDFs(VECTOR DB)  <---FETCH FROM
+                             |
+                             |
+                             |
+                             |
+                             V
+                       GRADE DOCS RELEVANCE     <---SCORE      
+                              |
+                              |
+                              |
+                              V
+                            QUALITY CHECK?
+                            |         |
+                            |         |
+                        < 2 GOOD CHUNKS   >=2 GOOD CHUNKS
+                            |         |
+                            |         |
+                            V         V
+                        WEB SEARCH    GENERATE ANSWER
+                             |          |
+                             |          |
+                             |__________|          
+                                   |
+                                   |
+                                   |
+                                   V
+                                   FINAL ANSWER + CITATION
+
+
+## INSTALLATION
+
+---PREREQUISITES
+1. PYTHON 3.8 OR HIGHER
+2. PIP PACKAGE MANAGER
+3. OPENAI API KEY
+4. BRAVE SEARCH API KEY
+
+---STEPS
+1. Clone the repository
+git clone https://github.com/opeblow/AI-RESEARCH-AGENT-.git
+cd AI-RESEARCH-AGENT
+
+2. Create a virtual environment
+python -m venv venv
+source venv/bin/activate #On windows:venv\Scripts\activate
+
+3. Install dependencies
 pip install -r requirements.txt
 
-OPENAI_API_KEY=sk-...
-BRAVE_API_KEY=bsa_XXXXXXXXXXXXXXXXXXXXXXXx
+4. Set up your PDF documents
+mkdir data #Place your PDF files in the data folder
 
-python main.py #To run the code
+## CONFIGURATION
+Environment Variables 
+Create .env file in the project root:
+OPENAI_API_KEY=sk-your-openai-api-key-here
+BRAVE_API_KEY=your-brave-api-key-here
+Optional:Model Configuration
+MODEL_NAME=gpt-4o-mini
+TEMPERATURE=0
 
-Tech Stack;
-Purpose                                Libray/Tool
+Getting API KEYS
+OpenAIAPIKey:
+1. Visit platform.openai.com
+2. Sign up or log in
+3. Navigate to API Keys section
+4. Create a new secret key
 
-|__Orchestration                      |__langgraph
-|__LLM                                |__gpt-4o
-|__Embeddings                         |__all-MiniLM-L6-v2
-|__Vector DB                          |__FAISS(CPU)
-|__Document Parsing                   |__Unstructured[all-docs]
-|__Web Search                         |__Brave Search API
-|__Type Saftey                        |__Pydantic v2 + TypedDict
+BRAVE SEARCH API KEY:
+1. Visit brave.com/search/api
+2. Sign up for API access
+3. Get your API key from the dashboard
 
+##USAGE
+Run the interactive CLI:
+python main.py
+
+**EXAMPLE SESSION**
+Your CRAG is ALIVE. Built by Mobolaji Opeyemi . Corrective RAG with local PDFs + Brave Search fallback
+Type 'quit' to exit
+Ask me anythong:What is machine learning?
+Thinking.....
+
+Retrieving from local documents...
+Grading retrieved documents..
+-> 3 high-quality chunks found
+Generating final answer...
+
+ANSWER
+Machine learning is a subset of Artificial Intelligence that enables systems to learn and improve from experience without being explicitly programmed.It uses algorithms to identify patterns in data and make preditions or decisions based on those patterns.
+
+SOURCES:
+- [source: ml_textbook.pdf]
+- [source: ai_fundamentals.pdf]
+- [source: data_science_guide.pdf]
+
+__________________________________________
+BUILT by Mobolaji Opeyemi .CRAG System
+__________________________________________
+Ask me anything:
+
+## PROJECT STRUCTURE
+AI-RESEARCH-AGENT/
+|__main.py
+|__chainlit_app.py
+|__chainlit.md
+|__requirements.txt
+|__.env
+|__.gitignore
+|__README.md
+|__app/
+|  |__ __init__ .py
+|  |__ agent.py
+|  |__ nodes.py
+|  |__ models.py
+|  |__ tools.py
+|  |__ prompts.py
+|  |__ utils.py
+|__data/
+|  |__ document1.pdf
+|  |__ document2.pdf
+|__ .chainlit/
+    |__ config.toml
+
+
+## HOW IT WORKS
+1. Retrieval Phase: 
+    . User query is embedded using OpenAI embeddings.
+    . Vector similarity search retrieves top-k relevant chunks from local PDFs
+    . Documents are ranked by relevance score
+
+2. Grading Phase:
+    . Each retrieved document is evaluated by an LLM grader
+    . Grader assigns relevance score(0.0 -1.0) and grade (RELEVANT/IRRELEVANT)
+    . One highly-quality chunks(score > 0.7) are considered
+
+3. Decision Phase:
+    . If >=2 high-quality chunks found -> proceed to generation
+    .if <2 high-quality chunks -> trigger web search fallback
+
+
+4. Web Search Phase(IF TRIGGERED)
+    . Query sent to Brave Search API
+    . Top 5 web results retrieved
+    . Results added to document pool
+
+5. Generation Phase:
+     . All relevant documents combined into context
+     . GPT-4 generates comprehensive anser
+     . Citations extracted from document metadata
+
+
+## API KEYS REQUIRED
+_______________________________________________________________
+Service     |                Purpose    |      Cost   |   Get Key|
+____________|_____________________________________________________ 
+                                                        
+  OPENAI        EMBEDDING AND GENERATION         PAY        platform.openai.com
+                                                 PER USE      
+
+
+Brave Search            Web fallback search      Free tier       brave.con/search/api
+
+
+
+## CONTRIBUTING
+Contributions are welcome! Please follow these steps:
+1. Fork the repository
+2. Create a feature branch (git checkout -b feature/AmazingFeature)
+3. Commit your changes (git commit -m 'ADD SOME AMAZING FEATURES')
+4. Open a pull request
+
+
+
+## ACKNOWLEDGEMENTS
+  - Built with langchain and langGraph
+  - Powered by OpenAIGPT-4
+  - Web search via BraveSearchAPI
+
+
+
+## CONTACT
+  - Email: opeblow2021gmail.com
+
+  
