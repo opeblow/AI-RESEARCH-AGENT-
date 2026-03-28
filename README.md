@@ -1,228 +1,494 @@
-Built by Mobolaji Opeyemi Bolatito 
-A sophisticated Corrective RAG system that intelligently combines local PDF document retrieval with web search fallback to provide accurate,well-sourced answers to user queries.
+# CRAG - Corrective Retrieval-Augmented Generation
 
+![Logo](frontend/public/logo.svg)
 
-## TABLE OF CONTENTS
-  . Overview
-  . Features
-  .Architecture
-  .Installation
-  .Configuration
-  .Usage
-  .Project Structure
-  .How it works
-  .Contributing
+<!-- Badges -->
+![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.2+-red.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-green.svg)
+![React](https://img.shields.io/badge/React-18.3-61dafb.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Version](https://img.shields.io/badge/Version-1.0.0-purple.svg)
 
+> **Production-grade AI research agent with intelligent document retrieval, quality grading, and web search fallback powered by PyTorch ML models.**
 
-## OVERVIEW
-CRAG(Corrective Retrieval-Augmented Generation) is an intelligent question answering system that:
+## Table of Contents
 
-1. Retrieves relevant information from your local PDF documents.
-2. Grades the quality and relevance of retrieved documents.
-3. Corrects by falling back to web search when local documents are insufficient.
-4. Generates accurate answers with proper source citations
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Architecture](#-architecture)
+- [Quick Start](#-quick-start)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Usage](#-usage)
+- [API Reference](#-api-reference)
+- [Project Structure](#-project-structure)
+- [Development](#-development)
+- [Production Deployment](#-production-deployment)
 
-This hybrid approach ensures you get the best possible answer whether the information exists in your local knowkleded base or needs to be fetched from the web.
+## Features
 
-## FEATURES
-1. Smart Document Retrieval: Vector-based search through local PDF documents.
-2. Quality Grading:Fallback Brave Search integration for current/missing information.
-3. Sources Citation: Every answer includes traceable sources.
-4. Langgraph Workflow:State machine-based processing pipeline.
-5. Dual Interface:Both CLI and chainlit web UI available.
-6. Chainlit Web UI:Beautiful interactive web interface with chat hstory.
-6. GPT-4 Powered:Leverages OpenAI's GPT-4o-mini for generation.
+- **Intelligent Document Retrieval**: Vector-based semantic search through local documents using sentence-transformers
+- **ML-Powered Quality Grading**: PyTorch neural network classifiers for document relevance assessment
+- **Corrective Fallback**: Automatic Brave Search integration when local knowledge is insufficient
+- **Answer Quality Assessment**: Built-in ML model evaluates response confidence and quality
+- **Semantic Similarity**: Advanced similarity computation for better document ranking
+- **Source Citations**: Every answer includes traceable, verifiable sources
+- **LangGraph Workflow**: State-machine based processing pipeline for reliability
+- **Dual Interfaces**: Modern React web UI + CLI for flexibility
+- **Production Ready**: Docker containerization, CORS, rate limiting, comprehensive error handling
 
+## Tech Stack
 
-## ARCHITECTURE
+| Layer | Technology |
+|-------|------------|
+| **ML Models** | PyTorch, sentence-transformers, transformers |
+| **LLM Framework** | LangChain, LangGraph |
+| **Embedding** | all-MiniLM-L6-v2 (local) |
+| **LLM** | GPT-4o-mini (OpenAI) |
+| **Vector DB** | FAISS |
+| **Backend API** | FastAPI, uvicorn |
+| **Frontend** | React 18, TypeScript, Vite |
+| **Document Processing** | unstructured |
+| **Web Search** | Brave Search API |
 
-┌─────────────┐
-│   User      │
-│   Query     │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────┐
-│   RETRIEVE      │  ← Fetch from local PDFs
-│   (Vector DB)   │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  GRADE DOCS     │  ← Score relevance (0-1)
-│  (LLM Grader)   │
-└────────┬────────┘
-         │
-         ▼
-    ┌────┴────┐
-    │ Quality │
-    │ Check?  │
-    └─┬────┬──┘
-      │    │
- <2 good chunks  ≥2 good chunks
-      │    │
-      ▼    ▼
-┌──────────┐  ┌──────────┐
-│   WEB    │  │ GENERATE │
-│  SEARCH  │  │  ANSWER  │
-└────┬─────┘  └────┬─────┘
-     │             │
-     └──────┬──────┘
-            ▼
-    ┌──────────────┐
-    │   FINAL      │
-    │   ANSWER     │
-    │ + CITATIONS  │
-    └──────────────┘
+## Architecture
 
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         User Interface                          │
+│                    (React Web UI / CLI)                         │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      FastAPI Backend                            │
+│  ┌─────────────┐  ┌──────────────┐  ┌─────────────────────────┐ │
+│  │   Routers   │  │   Middleware │  │   LangGraph Workflow    │ │
+│  │  /query     │  │   CORS,Logs  │  │   ┌─────┐ ┌─────────┐   │ │
+│  │  /documents │  │   Rate Limit │  │   │Retrieve│ │Grade   │   │ │
+│  │  /health   │  │              │  │   └─────┘ └─────────┘   │ │
+│  └─────────────┘  └──────────────┘  │   ┌──────┐ ┌────────┐   │ │
+│                                    │   │Web   │ │Generate│   │ │
+│                                    │   │Search│ │Answer │   │ │
+│                                    │   └──────┘ └────────┘   │ │
+│                                    └─────────────────────────┘ │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+          ┌─────────────────────┼─────────────────────┐
+          ▼                     ▼                     ▼
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│   FAISS         │  │   Brave Search  │  │   PyTorch ML    │
+│   Vector Store  │  │   API           │  │   Models        │
+│   (Local Docs)  │  │   (Web Fallback)│  │   (Classifier)  │
+└─────────────────┘  └─────────────────┘  └─────────────────┘
+```
 
-## INSTALLATION
+### Workflow
 
----PREREQUISITES
-1. PYTHON 3.8 OR HIGHER
-2. PIP PACKAGE MANAGER
-3. OPENAI API KEY
-4. BRAVE SEARCH API KEY
+```
+User Query
+    │
+    ▼
+┌────────────────────────────────────────────────────────────┐
+│  1. RETRIEVE - Vector similarity search in local docs      │
+└────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌────────────────────────────────────────────────────────────┐
+│  2. GRADE - ML classifier scores document relevance        │
+└────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────┐        ┌─────────────────────┐
+│  < 2 good chunks?   │────YES──│  3. WEB SEARCH      │
+└─────────────────────┘        │    Brave Search API │
+        │ NO                    └─────────────────────┘
+        ▼                               │
+┌─────────────────────┐                  │
+│  4. GENERATE        │◄─────────────────┘
+│  GPT-4o-mini        │
+└─────────────────────┘
+    │
+    ▼
+┌────────────────────────────────────────────────────────────┐
+│  5. RESPONSE - Answer with citations & confidence score    │
+└────────────────────────────────────────────────────────────┘
+```
 
----STEPS
-1. Clone the repository
-git clone https://github.com/opeblow/AI-RESEARCH-AGENT-.git
-cd AI-RESEARCH-AGENT
+## Quick Start
 
-2. Create a virtual environment
+### Using Docker (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/opeblow/AI-RESEARCH-AGENT.git
+cd crag
+
+# Create .env file
+cp .env.example .env
+# Edit .env with your API keys
+
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Access the web UI
+open http://localhost:3000
+```
+
+### Manual Setup
+
+```bash
+# 1. Clone and setup environment
+git clone https://github.com/opeblow/AI-RESEARCH-AGENT.git
+cd crag
+
+# 2. Create virtual environment
 python -m venv venv
-source venv/bin/activate #On windows:venv\Scripts\activate
+source venv/bin/activate  # Linux/Mac
+# or: venv\Scripts\activate  # Windows
 
-3. Install dependencies
+# 3. Install dependencies
 pip install -r requirements.txt
 
-4. Set up your PDF documents
-mkdir data #Place your PDF files in the data folder
+# 4. Configure environment
+cp .env.example .env
+# Edit .env with your OPENAI_API_KEY and BRAVE_API_KEY
 
-## CONFIGURATION
-Environment Variables 
-Create .env file in the project root:
-OPENAI_API_KEY=sk-your-openai-api-key-here
-BRAVE_API_KEY=your-brave-api-key-here
-Optional:Model Configuration
+# 5. Add documents
+mkdir -p data
+# Place your PDF, DOCX, or TXT files in data/
+
+# 6. Run the backend
+python server.py
+
+# 7. In another terminal, run the frontend
+cd frontend
+npm install
+npm run dev
+```
+
+## Installation
+
+### Prerequisites
+
+- **Python**: 3.11 or higher
+- **Node.js**: 18 or higher (for frontend development)
+- **OpenAI API Key**: [Get one here](https://platform.openai.com/api-keys)
+- **Brave Search API Key**: [Get one here](https://brave.com/search/api/)
+
+### Backend Installation
+
+```bash
+# Clone repository
+git clone https://github.com/opeblow/AI-RESEARCH-AGENT.git
+cd crag
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Frontend Installation
+
+```bash
+cd frontend
+npm install
+```
+
+## Configuration
+
+Create a `.env` file in the project root:
+
+```env
+# Required
+OPENAI_API_KEY=sk-your-openai-api-key
+BRAVE_API_KEY=your-brave-search-api-key
+
+# Optional (with defaults)
+APP_NAME=CRAG System
+DEBUG=false
+ENVIRONMENT=development
+
 MODEL_NAME=gpt-4o-mini
-TEMPERATURE=0
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+TEMPERATURE=0.0
 
-Getting API KEYS
-OpenAIAPIKey:
-1. Visit platform.openai.com
+VECTORSTORE_PATH=vectorstore
+DATA_PATH=data
+CHUNK_SIZE=1000
+CHUNK_OVERLAP=200
+TOP_K_RESULTS=10
+
+GRADE_THRESHOLD=0.7
+MIN_RELEVANT_CHUNKS=2
+
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+LOG_LEVEL=INFO
+```
+
+### Getting API Keys
+
+**OpenAI API Key:**
+1. Visit [platform.openai.com](https://platform.openai.com)
 2. Sign up or log in
 3. Navigate to API Keys section
 4. Create a new secret key
 
-BRAVE SEARCH API KEY:
-1. Visit brave.com/search/api
+**Brave Search API Key:**
+1. Visit [brave.com/search/api](https://brave.com/search/api/)
 2. Sign up for API access
 3. Get your API key from the dashboard
 
-##USAGE
-Run the interactive CLI:
+## Usage
+
+### CLI Interface
+
+```bash
 python main.py
+```
 
-**EXAMPLE SESSION**
-Your CRAG is ALIVE. Built by Mobolaji Opeyemi . Corrective RAG with local PDFs + Brave Search fallback
-Type 'quit' to exit
-Ask me anythong:What is machine learning?
-Thinking.....
+Example session:
+```
+======================================================================
+CRAG - Corrective Retrieval-Augmented Generation System
+======================================================================
+Built by Mobolaji Opeyemi Bolatito Obinna
+Local PDFs + Brave Search Fallback
+======================================================================
 
-Retrieving from local documents...
-Grading retrieved documents..
--> 3 high-quality chunks found
-Generating final answer...
+Ask me anything: What are the key findings in the Q3 report?
 
-ANSWER
-Machine learning is a subset of Artificial Intelligence that enables systems to learn and improve from experience without being explicitly programmed.It uses algorithms to identify patterns in data and make preditions or decisions based on those patterns.
+Thinking...
 
+======================================================================
+ANSWER:
+======================================================================
+The Q3 report shows significant growth in revenue...
+
+======================================================================
 SOURCES:
-- [source: ml_textbook.pdf]
-- [source: ai_fundamentals.pdf]
-- [source: data_science_guide.pdf]
+======================================================================
+  [LOCAL] Q3_2024_Report.pdf
 
-__________________________________________
-BUILT by Mobolaji Opeyemi .CRAG System
-__________________________________________
-Ask me anything:
+----------------------------------------------------------------------
+CRAG System - Corrective Retrieval-Augmented Generation
+----------------------------------------------------------------------
+```
 
-## PROJECT STRUCTURE
-AI-REASEARCH-AGENT/
+### Web Interface
+
+Start the servers:
+
+```bash
+# Terminal 1: Backend
+python server.py
+
+# Terminal 2: Frontend
+cd frontend && npm run dev
+```
+
+Access at `http://localhost:5173`
+
+### API Endpoints
+
+#### Query the System
+
+```bash
+curl -X POST http://localhost:8000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is machine learning?"}'
+```
+
+Response:
+```json
+{
+  "answer": "Machine learning is a subset of...",
+  "sources": [
+    {"source": "ml_intro.pdf", "type": "local", "title": "Introduction to ML"}
+  ],
+  "conversation_id": "abc123",
+  "model": "gpt-4o-mini",
+  "processing_time_ms": 2450.32,
+  "confidence": 0.92,
+  "retrieved_chunks": 10,
+  "used_web_search": false
+}
+```
+
+#### Health Check
+
+```bash
+curl http://localhost:8000/api/health
+```
+
+#### Upload Documents
+
+```bash
+curl -X POST http://localhost:8000/api/documents/upload \
+  -F "file=@document.pdf"
+```
+
+#### Rebuild Index
+
+```bash
+curl -X POST http://localhost:8000/api/documents/rebuild-index
+```
+
+## API Reference
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/query` | Process a query through CRAG |
+| `GET` | `/api/health` | Health check |
+| `POST` | `/api/documents/upload` | Upload and index a document |
+| `POST` | `/api/documents/rebuild-index` | Rebuild the entire index |
+
+### Error Handling
+
+All errors return JSON with structure:
+```json
+{
+  "error": "Error description",
+  "detail": "Additional details",
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+## Project Structure
+
+```
+crag/
+├── crag/                      # Main Python package
+│   ├── __init__.py
+│   ├── main.py               # FastAPI app entry point
+│   ├── config.py             # Configuration management
+│   ├── schemas.py            # Pydantic models
+│   ├── models.py            # Agent state types
+│   ├── prompts.py            # LLM prompt templates
+│   ├── agent.py              # LangGraph workflow
+│   ├── nodes.py              # Workflow nodes
+│   ├── vectorstore.py        # FAISS management
+│   ├── document_processor.py # PDF/DOCX processing
+│   ├── llm_manager.py        # LLM and chain management
+│   ├── search.py             # Brave Search client
+│   ├── routers/              # API route handlers
+│   │   ├── __init__.py
+│   │   ├── health.py
+│   │   ├── query.py
+│   │   └── documents.py
+│   └── ml/                   # PyTorch ML components
+│       ├── __init__.py
+│       ├── models/
+│       │   ├── __init__.py
+│       │   ├── relevance_classifier.py
+│       │   └── answer_quality_assessor.py
+│       └── similarity/
+│           ├── __init__.py
+│           └── semantic_similarity.py
 │
-├── main.py                 # Entry point - CLI interface
-├── chainlit_app.py         # Chainlit web UI application
-├── chainlit.md             # Chainlit welcome/config file
-├── requirements.txt        # Python dependencies
-├── .env                    # Environment variables (create this)
-├── .gitignore             # Git ignore rules
-├── README.md              # This file
+├── frontend/                  # React frontend
+│   ├── src/
+│   │   ├── components/       # React components
+│   │   ├── api/             # API client
+│   │   ├── types.ts         # TypeScript types
+│   │   ├── App.tsx          # Main app
+│   │   └── index.css        # Styles
+│   ├── public/              # Static assets
+│   └── package.json
 │
-├── app/
-│   ├── _init_.py
-│   ├── agent.py           # LangGraph workflow definition
-│   ├── nodes.py           # Processing nodes (retrieve, grade, search, generate)
-│   ├── models.py          # Pydantic models for state management
-│   ├── tools.py           # Retriever and search tools
-│   ├── prompts.py         # LLM prompt templates
-│   └── utils.py           # Utility functions (PDF loading, embeddings)
+├── data/                     # Document storage
+│   └── *.pdf, *.docx, *.txt
 │
-├── data/                  # Place your PDF documents here
-│   ├── document1.pdf
-│   ├── document2.pdf
-│   └── ...
+├── tests/                    # Unit tests
 │
-└── .chainlit/            # Chainlit config (auto-generated)
-    └── config.toml
+├── main.py                  # CLI entry point
+├── server.py                # API server entry point
+├── requirements.txt         # Python dependencies
+├── docker-compose.yml       # Docker orchestration
+├── Dockerfile              # Backend container
+├── .env.example            # Environment template
+├── .gitignore
+└── README.md
+```
 
+## Development
 
-## HOW IT WORKS
-1. Retrieval Phase: 
-    . User query is embedded using OpenAI embeddings.
-    . Vector similarity search retrieves top-k relevant chunks from local PDFs
-    . Documents are ranked by relevance score
+### Running Tests
 
-2. Grading Phase:
-    . Each retrieved document is evaluated by an LLM grader
-    . Grader assigns relevance score(0.0 -1.0) and grade (RELEVANT/IRRELEVANT)
-    . One highly-quality chunks(score > 0.7) are considered
+```bash
+# Python tests
+pytest tests/ -v
 
-3. Decision Phase:
-    . If >=2 high-quality chunks found -> proceed to generation
-    .if <2 high-quality chunks -> trigger web search fallback
+# Frontend tests
+cd frontend
+npm test
+```
 
+### Code Quality
 
-4. Web Search Phase(IF TRIGGERED)
-    . Query sent to Brave Search API
-    . Top 5 web results retrieved
-    . Results added to document pool
+```bash
+# Python linting
+ruff check crag/
 
-5. Generation Phase:
-     . All relevant documents combined into context
-     . GPT-4 generates comprehensive anser
-     . Citations extracted from document metadata
+# Frontend linting
+cd frontend
+npm run lint
+```
 
+## Production Deployment
 
+### Docker Production
 
+```bash
+# Build for production
+docker-compose -f docker-compose.yml up --build
 
+# Run in detached mode
+docker-compose up -d
+```
 
-## CONTRIBUTING
-Contributions are welcome! Please follow these steps:
-1. Fork the repository
-2. Create a feature branch (git checkout -b feature/AmazingFeature)
-3. Commit your changes (git commit -m 'ADD SOME AMAZING FEATURES')
-4. Open a pull request
+### Environment Variables for Production
 
+```env
+ENVIRONMENT=production
+DEBUG=false
+LOG_LEVEL=WARNING
 
+# Increase rate limiting
+API_RATE_LIMIT=1000
+```
 
-## ACKNOWLEDGEMENTS
-  - Built with langchain and langGraph
-  - Powered by OpenAIGPT-4
-  - Web search via BraveSearchAPI
+### Health Checks
 
+The backend includes automatic health checks:
+```bash
+curl http://localhost:8000/api/health
+```
 
+## License
 
-## CONTACT
-  - Email: opeblow2021gmail.com
+MIT License - Built by Mobolaji Opeyemi Bolatito Obinna
 
+## Acknowledgements
+
+- [LangChain](https://github.com/langchain-ai/langchain) - LLM framework
+- [LangGraph](https://github.com/langchain-ai/langgraph) - State machine workflows
+- [sentence-transformers](https://github.com/UKPLab/sentence-transformers) - Embedding models
+- [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
+- [React](https://react.dev/) - UI library
+
+## Support
+
+For issues and feature requests, please open an issue on GitHub.
+
+---
+
+<p align="center">
+  Built with love by <strong>Mobolaji Opeyemi Bolatito Obinna</strong>
+</p>

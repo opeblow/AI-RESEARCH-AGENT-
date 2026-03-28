@@ -1,48 +1,75 @@
+#!/usr/bin/env python3
+"""CRAG CLI - Command-line interface for the CRAG system."""
+
 import os
-from dotenv import load_dotenv
+import sys
 
-
-# Set tokenizers parallelism to avoid warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-
+from dotenv import load_dotenv
 load_dotenv()
-from app.agent import app
-from app.models import AgentState
 
-print("\nCRAG IS ALIVE")
-print("Built by MOBOLAJI OPEYEMI BOLATITO,Corrective RAG with local PDFs + Brave Search fallback\n")
-print("Type 'quit','exit',or 'bye' to stop\n")
+from crag.agent import crag_app
 
-while True:
-    question=input("Ask me anything:")
-    if question.lower() in {"quit","exit","bye",""}:
-        print("\nSee you later")
-        break
-    if not question:
-        continue
-    print("\nThinking....",end="\n\n")
 
-    try:
-        result=app.invoke({"question":question})
-        final_answer=result.get("answer","No answer generate")
-        print("\n" + "="*80)
-        print("ANSWER:")
-        print("="*80)
-        print(final_answer)
-        print("\n" + "="*80)
-        print("SOURCES:")
-        print("="*80)
+def main():
+    """Run the CRAG CLI."""
+    print("\n" + "=" * 70)
+    print("CRAG - Corrective Retrieval-Augmented Generation System")
+    print("=" * 70)
+    print("Built by Mobolaji Opeyemi Bolatito Obinna")
+    print("Local PDFs + Brave Search Fallback")
+    print("=" * 70)
+    print("\nType 'quit', 'exit', or 'bye' to stop\n")
 
-        print("\nSOURCES")
+    while True:
+        try:
+            question = input("Ask me anything: ").strip()
+            
+            if question.lower() in {"quit", "exit", "bye", ""}:
+                print("\nGoodbye!")
+                break
+            
+            if not question:
+                continue
+                
+            print("\nThinking...\n")
 
-        citations=result.get("citations",[])
-        for c in citations[:10]:
-            print(" . ",c)
-        print("\n" +"-" *80)
-        print("BUILT BY MOBOLAJI OPEYEMI BOLATITO OBINNA .CRAG SYSTEM(CORRECTIVE RETRIEVAL -AUGMENTED-GENERATION)")
-        print("-"*80 + "\n")
-    except Exception as e:
-        print(F"Something went wrong:{e}")
-        print("Try again!\n")
+            result = crag_app.invoke({"question": question})
+            
+            print("\n" + "=" * 70)
+            print("ANSWER:")
+            print("=" * 70)
+            print(result.get("answer", "No answer generated"))
+            
+            print("\n" + "=" * 70)
+            print("SOURCES:")
+            print("=" * 70)
+            
+            citations = result.get("citations", [])
+            if citations:
+                for c in citations[:10]:
+                    source_type = c.get("type", "local")
+                    source_name = c.get("source", "Unknown")
+                    print(f"  [{source_type.upper()}] {source_name}")
+            else:
+                print("  No sources found")
+            
+            used_web = result.get("used_web_search", False)
+            if used_web:
+                print("\n  (Web search was used for this query)")
+            
+            print("\n" + "-" * 70)
+            print("CRAG System - Corrective Retrieval-Augmented Generation")
+            print("-" * 70 + "\n")
 
+        except KeyboardInterrupt:
+            print("\n\nInterrupted. Goodbye!")
+            sys.exit(0)
+        except Exception as e:
+            print(f"\nError: {e}")
+            print("Please try again.\n")
+
+
+if __name__ == "__main__":
+    main()

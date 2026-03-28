@@ -1,6 +1,49 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+myenv/
+
+# Environment variables
 .env
-myenv
-__pycache__
-vectorstore
+.env.local
 
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
+# Vector store (rebuild on deploy)
+vectorstore/
+
+# Data files
+data/*.pdf
+data/*.docx
+data/*.txt
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Type checking
+*.tsbuildinfo
