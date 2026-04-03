@@ -4,8 +4,11 @@ import logging
 import requests
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
-
 logger = logging.getLogger(__name__)
+import os
+from dotenv import load_dotenv
+load_dotenv()
+api_key = os.getenv("BRAVE_API_KEY")
 
 
 class BraveSearchClient:

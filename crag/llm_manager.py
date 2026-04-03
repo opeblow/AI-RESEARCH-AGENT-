@@ -5,14 +5,19 @@ from typing import Optional
 from functools import lru_cache
 
 logger = logging.getLogger(__name__)
+import os
+from dotenv import load_dotenv
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 
 class LLMManager:
     """Manages LLM instances with lazy loading."""
 
-    def __init__(self, model_name: str = "gpt-4o-mini", temperature: float = 0.0):
+    def __init__(self, model_name: str = "gpt-4o-mini", temperature: float = 0.0,openai_api_key:Optional[str]=None):
         self.model_name = model_name
         self.temperature = temperature
+        self.openai_api_key=openai_api_key
         self._llm = None
         self._grader_chain = None
         self._generator_chain = None
@@ -25,7 +30,8 @@ class LLMManager:
             from langchain_openai import ChatOpenAI
             self._llm = ChatOpenAI(
                 model=self.model_name,
-                temperature=self.temperature
+                temperature=self.temperature,
+                openai_api_key=self.openai_api_key
             )
         return self._llm
 
@@ -49,11 +55,11 @@ class LLMManager:
 
     @classmethod
     @lru_cache(maxsize=1)
-    def get_instance(cls, model_name: str = "gpt-4o-mini", temperature: float = 0.0) -> "LLMManager":
+    def get_instance(cls, model_name: str = "gpt-4o-mini", temperature: float = 0.0,openai_api_key:Optional[str]=None,) -> "LLMManager":
         """Get singleton instance."""
-        return cls(model_name=model_name, temperature=temperature)
+        return cls(model_name=model_name, temperature=temperature,openai_api_key=openai_api_key)
 
 
-def get_llm_manager(model_name: str = "gpt-4o-mini", temperature: float = 0.0) -> LLMManager:
+def get_llm_manager(model_name: str = "gpt-4o-mini", temperature: float = 0.0,openai_api_key:Optional[str]=None,) -> LLMManager:
     """Factory function for LLM manager."""
-    return LLMManager.get_instance(model_name=model_name, temperature=temperature)
+    return LLMManager.get_instance(model_name=model_name, temperature=temperature,openai_api_key=openai_api_key)

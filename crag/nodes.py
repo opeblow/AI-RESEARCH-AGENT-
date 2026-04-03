@@ -121,7 +121,7 @@ class CRAGNodes:
 
         try:
             search_func = self.get_brave_search()
-            results = search_func(state["question"], count=5)
+            results = search_func(state["question"], 5)
 
             for r in results:
                 url = r.get("link", "")
