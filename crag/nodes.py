@@ -43,7 +43,7 @@ class CRAGNodes:
     def generator_chain(self):
         """Lazy load generator chain."""
         if self._generator_chain is None:
-            from crag.llm_manager import get_llm_manager
+            from .llm_manager import get_llm_manager
             manager = get_llm_manager()
             self._generator_chain = manager.get_generator_chain(RAG_PROMPT)
         return self._generator_chain

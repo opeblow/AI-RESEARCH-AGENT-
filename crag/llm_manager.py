@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
-
+_instance = None
 class LLMManager:
     """Manages LLM instances with lazy loading."""
 
@@ -54,18 +54,22 @@ class LLMManager:
             generator_prompt = ChatPromptTemplate.from_template(prompt_template)
             self._generator_chain = generator_prompt | self.llm | StrOutputParser()
         return self._generator_chain
+
+def get_llm_manager(model_name:str = "gpt-4o-mini",temperature:float = 0.0)-> LLMManager:
+    """Singleton getter for LLMManager."""
+    global _instance
+    if _instance is None:
+        settings = get_settings()
+        _instance = LLMManager(
+            model_name=model_name,
+            temperature=temperature,
+            openai_api_key=openai_api_key
+        )
+
+    return _instance
     
   
 
-    def get_llm_manager(model_name:str ="gpt-4o-mini",temperature:float = 0.0) -> "LLMManager":
-        global _instance
-        if _instance is None:
-            settings=get_settings()
-            _instance = LLMManager(
-                model_name= model_name,
-                temperature=temperature,
-                openai_api_key=settings.OPENAI_API_KEY
-            )
-        return _instance
+    
 
     
