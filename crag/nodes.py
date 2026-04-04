@@ -57,18 +57,18 @@ class CRAGNodes:
             self._brave_search = lambda q, c=5: brave_search_results(q, api_key, c)
         return self._brave_search
 
-    def retrieve(self, state: AgentState) -> Dict:
+    async def retrieve(self, state: AgentState) -> Dict:
         """Retrieve documents from vector store."""
         logger.info("Retrieving from local documents")
         try:
-            docs: List[Document] = self.retriever.invoke(state["question"])
+            docs: List[Document] =await self.retriever.ainvoke(state["question"])
             logger.info(f"Retrieved {len(docs)} documents")
             return {"documents": docs}
         except Exception as e:
             logger.error(f"Retrieval failed: {e}")
             return {"documents": []}
 
-    def grade_documents(self, state: AgentState) -> Dict:
+    async def grade_documents(self, state: AgentState) -> Dict:
         """Grade retrieved documents for relevance."""
         logger.info("Grading retrieved documents")
         docs = state["documents"]
@@ -76,7 +76,7 @@ class CRAGNodes:
 
         for i, doc in enumerate(docs):
             try:
-                raw = self.grader_chain.invoke({
+                raw =await self.grader_chain.ainvoke({
                     "question": state["question"],
                     "context": doc.page_content
                 })
@@ -149,7 +149,7 @@ class CRAGNodes:
             logger.error(f"Web search failed: {e}")
             return {"documents": state["documents"], "used_web_search": False}
 
-    def generate(self, state: AgentState) -> Dict:
+    async def generate(self, state: AgentState) -> Dict:
         """Generate final answer from relevant documents."""
         logger.info("Generating final answer")
 
@@ -179,7 +179,7 @@ class CRAGNodes:
             }
 
         context = "\n\n".join([d.page_content for d in docs_to_use])
-        answer = self.generator_chain.invoke({
+        answer =await self.generator_chain.ainvoke({
             "context": context,
             "question": state["question"]
         })

@@ -25,7 +25,7 @@ async def query_crag(request: QueryRequest):
     try:
         logger.info(f"Processing query: {request.question[:100]}...")
         
-        result = await crag_app.invoke({"question": request.question})
+        result = await crag_app.ainvoke({"question": request.question})
         
         processing_time = (time.time() - start_time) * 1000
 

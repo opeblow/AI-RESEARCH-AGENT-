@@ -3,6 +3,8 @@
 import logging
 from typing import Optional
 from functools import lru_cache
+from crag.config import get_settings
+
 
 logger = logging.getLogger(__name__)
 import os
@@ -52,14 +54,18 @@ class LLMManager:
             generator_prompt = ChatPromptTemplate.from_template(prompt_template)
             self._generator_chain = generator_prompt | self.llm | StrOutputParser()
         return self._generator_chain
+    
+  
 
-    @classmethod
-    @lru_cache(maxsize=1)
-    def get_instance(cls, model_name: str = "gpt-4o-mini", temperature: float = 0.0,openai_api_key:Optional[str]=None,) -> "LLMManager":
-        """Get singleton instance."""
-        return cls(model_name=model_name, temperature=temperature,openai_api_key=openai_api_key)
+    def get_llm_manager(model_name:str ="gpt-4o-mini",temperature:float = 0.0) -> "LLMManager":
+        global _instance
+        if _instance is None:
+            settings=get_settings()
+            _instance = LLMManager(
+                model_name= model_name,
+                temperature=temperature,
+                openai_api_key=settings.OPENAI_API_KEY
+            )
+        return _instance
 
-
-def get_llm_manager(model_name: str = "gpt-4o-mini", temperature: float = 0.0,openai_api_key:Optional[str]=None,) -> LLMManager:
-    """Factory function for LLM manager."""
-    return LLMManager.get_instance(model_name=model_name, temperature=temperature,openai_api_key=openai_api_key)
+    
